@@ -10,17 +10,88 @@
 #include "bogglemain.h"
 #include "strlib.h"
 #include "grid.h"
+#include <algorithm>
+#include <lexicon.h>
+#include <set>
 // TODO: include any other header files you need
 
-const string alphabet  = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const string alphabet  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+void promptUserInput(Boggle& boggle){
+
+    set<string> userWords;
+    Lexicon lex("EnglishWords.dat");
+    string tempWord;
+    cout << "Type a word (or press enter to quit: )";
+    cin >> tempWord;
+
+    while(tempWord != ""){
+
+        if(!lex.contains(tempWord)){
+            cout << "Not a word in the dictionary" << endl;
+        }
+        else if ((userWords.find(tempWord) != userWords.end())) {
+            cout << "Word already used" << endl;
+        }
+        else if ((tempWord.size() < 4)) {
+            cout << "Word is too small" << endl;
+        }
+        else if (boggle.findWordInGrid(tempWord)) {
+            //giltigt ord
+        }
+        else {
+
+            userWords.insert(tempWord);
+        }
+
+        cout << "Your words (" << userWords.size() << "):";
+        for(set<string>::iterator it = userWords.begin(); it != userWords.end(); it++){
+            cout << *it << " ";
+        }
+        cout << endl;
+
+        cout << "Type a word (or press enter to quit: )";
+        cin >> tempWord;
+    }
+}
+
+void promptCreateGrid(Boggle& boggle){
+    char answer;
+    bool answered = false;
+    string manualCharacters = "";
+    bool correctFormat;
+
+    while(!answered) {
+        cin >> answer;
+        if (answer == 'y') {
+            boggle.createGrid(manualCharacters);
+            answered = true;
+        }
+        else if (answer == 'n') {
+            answered = true;
+            while (!correctFormat) {
+                cout << "Enter a string with 16 characters, must be a-z" << endl;
+                cin >> manualCharacters;
+                transform(manualCharacters.begin(), manualCharacters.end(),manualCharacters.begin(), ::toupper); //makes the str uppercase
+
+                int noCubes = boggle.fetchNUM_CUBES();
+                if (manualCharacters.size() == noCubes && (!manualCharacters.find_first_not_of(alphabet) != string::npos)) {
+                    correctFormat = true;
+                } else {
+                    cout << "Incorrect size of string or character, must be 16, a-z" << endl;
+                }
+            }
+            boggle.createGrid(manualCharacters);
+        }
+    }
+}
 void printGrid(Grid<char> grid){
 
     for(int row = 0; row < grid.numRows(); row++){
-         for(int col = 0; col < grid.numCols(); col++){
+        for(int col = 0; col < grid.numCols(); col++){
             cout << grid.get(row, col);
-         }
-         cout << endl;
+        }
+        cout << endl;
     }
 }
 
@@ -30,47 +101,12 @@ void printGrid(Grid<char> grid){
 void playOneGame(Boggle& boggle) {
     // TODO: implement this function (and add any other functions you like to help you)
     cout << "Do you want to generate a random board?";
-    char answer;
-    bool answered = false;
-    string manualGrid;
-    bool correctFormat;
-
-    while(!answered) {
-        cin >> answer;
-        if (answer == 'y') {
-            boggle.createGrid();
-            answered = true;
-        }
-        else if (answer == 'n') {
-            //TODO: Manuel inmatning av kubsträng.
-            answered = true;
-            while (!correctFormat) {
-                cout << "Please type a string with size 16, a-z" << endl;
-                cin >> manualGrid;
-                int noCubes = boggle.fetchNUM_CUBES();
-                if (manualGrid.size() == noCubes) {
-
-                    for (int j = 0; j < noCubes; j++) {
-                        if (!alphabet.find(manualGrid[j])) {
-                            cout << "Not a valid string" << endl;
-                            correctFormat = false;
-                            break;
-                        }
-                        correctFormat = true;
-
-                    }
-
-                } else {
-                    cout << "Not a valid string" << endl;
-                }
-            }
-        }
-    }
-
-    cout << "It's your turn!" << endl;
+    promptCreateGrid(boggle);
     printGrid(boggle.fetchGrid());
-
+    promptUserInput(boggle);
+    cout << "It's your turn!" << endl;
 }
+
 
 
 /*

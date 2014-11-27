@@ -21,10 +21,20 @@ public:
     const int BOARD_SIZE = 4;
 
     // TODO: decide the public member functions and declare them
+
     /**
-     * @brief createGrid skapar boogleGrid
+     * @brief findWordInGrid
+     * @param tempWord
+     * @return if word is in the board
      */
-    void createGrid();
+    bool findWordInGrid(string tempWord);
+
+    /**
+     * @brief createGrid
+     * @param gridString
+     */
+    void createGrid(string gridString);
+
 
     /**
      * @brief fetchGrid

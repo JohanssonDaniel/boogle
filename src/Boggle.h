@@ -1,8 +1,8 @@
-// This is the .h file you will edit and turn in.
-// We have provided a minimal skeleton for you,
-// but you must finish it as described in the spec.
-// Also remove these comments here and add your own, as well as on the members.
-// TODO: remove this comment header and replace it with your own
+/*
+ * A class representing a grid with characters which are randomly choosen from 16 different six sided cubes
+ * The layout of the grid decides what words can be created by the player and the computer.
+ * danjo732, piehe154
+ * */
 
 #ifndef _boggle_h
 #define _boggle_h
@@ -10,7 +10,8 @@
 #include <iostream>
 #include <string>
 #include <grid.h>
-// TODO: include any other header files you need
+#include <lexicon.h>
+#include <set>
 
 using namespace std;
 
@@ -20,7 +21,7 @@ public:
     const int MIN_WORD_LENGTH = 4;
     const int BOARD_SIZE = 4;
 
-    // TODO: decide the public member functions and declare them
+    void updateScore(string word);
 
     /**
      * @brief findWordInGrid
@@ -28,6 +29,8 @@ public:
      * @return if word is in the board
      */
     bool findWordInGrid(string tempWord);
+
+    void computerFind();
 
     /**
      * @brief createGrid
@@ -37,24 +40,41 @@ public:
 
 
     /**
-     * @brief fetchGrid
+     * @brief getGrid
      * @return our grid
      */
-    Grid<char> fetchGrid();
+    Grid<char> getGrid();
 
     /**
-     * @brief fetchNUM_CUBES
+     * @brief getNUM_CUBES
      * @return NUM CUBES
      */
-    int fetchNUM_CUBES();
+    int getNUM_CUBES() const;
+
+    set<string> getPlayerWords() const;
+
+    void insertplayerWord(string playerWord);
+
+    int getPlayerScore() const;
+
+    int getComputerScore() const;
+
+    set<string> getComputerWords() const;
+
+    void resetWordsScore();
 
 private:
     /**
-     * @brief boggleGrid representation av kuber som ett grid av char
+     * @brief boggleGrid representation of cubes in a grid
      */
     Grid<char> boggleGrid;
+    int playerScore = 0;
+    int computerScore = 0;
+    set<string> computerWords;
+    set<string> playerWords;
 
-    // TODO: decide the private member variables/functions and declare them
+    bool findNeighbours(int row, int col, string word, Grid<char> grid);
+    void findComputerNeighbours(int row, int col, string currentWord, Grid<char> grid, Lexicon lex);
 
 };
 

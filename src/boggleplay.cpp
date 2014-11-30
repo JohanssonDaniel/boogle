@@ -1,6 +1,7 @@
-// You will edit and turn in this CPP file.
-// Also remove these comments here and add your own.
-// TODO: remove this comment header and replace with your own
+/*
+ * Class that handles input and output from/to the user, delegates input to Boggle.cpp
+ * danjo732, piehe154
+ * */
 
 #include <cstdlib>
 #include <iostream>
@@ -13,68 +14,146 @@
 #include <algorithm>
 #include <lexicon.h>
 #include <set>
-// TODO: include any other header files you need
 
 const string alphabet  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+/**
+ * @brief clearWordsScore calls boggle.resetScore() to reset the score
+ */
+void clearWordsScore(Boggle& boggle){
+    boggle.resetWordsScore();
+}
+/**
+ * @brief printComputerWords prints the words that computer found and the score that it got
+ * @param boggle
+ */
+void printComputerWords(Boggle& boggle){
 
-void promptUserInput(Boggle& boggle){
+    boggle.computerFind();
 
-    set<string> userWords;
+    set<string> words = boggle.getComputerWords();
+    clearConsole();
+    cout << "It's my turn!" << endl;
+    cout << "My words (" << words.size() << "): " << "{";
+
+    for(set<string>::iterator it = words.begin(); it != words.end(); it++){
+        cout << "\""<< *it << "\",";
+    }
+
+    cout << "}";
+    cout << "\nMy score: "  << boggle.getComputerScore() << endl;
+    //If the computer has won the game, taunt the player
+    if(boggle.getComputerScore() > boggle.getPlayerScore()){
+        cout << "Ha ha ha, I destroyed you. Better luck next time, puny human!" << endl;
+    }
+}
+/**
+ * @brief printPlayerWords outputs the words that the player has found
+ * @param boggle
+ */
+void printPlayerWords(Boggle& boggle) {
+    set<string> playerWords = boggle.getPlayerWords();
+    cout << "Your words (" <<  playerWords.size() << "):";
+
+    for(set<string>::iterator it = playerWords.begin(); it != playerWords.end(); it++){
+        cout << *it << " ";
+    }
+
+    cout << endl;
+}
+/**
+ * @brief printGrid prints the cubes that are in the grid
+ * @param boggle
+ */
+void printGrid(Boggle& boggle){
+    Grid<char> grid = boggle.getGrid();
+    for(int row = 0; row < grid.numRows(); row++){
+        for(int col = 0; col < grid.numCols(); col++){
+            cout << grid.get(row, col);
+        }
+        cout << endl;
+    }
+}
+/**
+ * @brief promptplayerInput asks the player to type in a valid word
+ * @param boggle
+ */
+void promptplayerInput(Boggle& boggle){
     Lexicon lex("EnglishWords.dat");
     string tempWord;
-    cout << "Type a word (or press enter to quit: )";
-    cin >> tempWord;
 
-    while(tempWord != ""){
+    cout << "It's your turn!" << endl;
+
+    printGrid(boggle);
+
+    printPlayerWords(boggle);
+
+    cout << "Your score: " << boggle.getPlayerScore() << endl;
+    cout << "Type a word (or press 1 to quit): ";
+
+    cin >> tempWord;
+    //makes the str uppercase
+    transform(tempWord.begin(), tempWord.end(),tempWord.begin(), ::toupper);
+    clearConsole();
+    while(tempWord != "1"){
+
+        printGrid(boggle);
 
         if(!lex.contains(tempWord)){
             cout << "Not a word in the dictionary" << endl;
         }
-        else if ((userWords.find(tempWord) != userWords.end())) {
+        else if (!(boggle.getPlayerWords().find(tempWord) != boggle.getPlayerWords().end())) {
             cout << "Word already used" << endl;
         }
         else if ((tempWord.size() < 4)) {
             cout << "Word is too small" << endl;
         }
-        else if (boggle.findWordInGrid(tempWord)) {
-            //giltigt ord
+        else if (!(boggle.findWordInGrid(tempWord))) {
+            cout << "That word can't be formed on this board." << endl;
         }
         else {
-
-            userWords.insert(tempWord);
+            boggle.updateScore(tempWord);
+            boggle.insertplayerWord(tempWord);
         }
 
-        cout << "Your words (" << userWords.size() << "):";
-        for(set<string>::iterator it = userWords.begin(); it != userWords.end(); it++){
-            cout << *it << " ";
-        }
+        printPlayerWords(boggle);
+
         cout << endl;
+        cout << "Your score: " << boggle.getPlayerScore() << endl;
 
-        cout << "Type a word (or press enter to quit: )";
+        cout << "Type a word (or press 1 to quit): ";
         cin >> tempWord;
+
+        clearConsole();
+        //makes the str uppercase
+        transform(tempWord.begin(), tempWord.end(),tempWord.begin(), ::toupper);
     }
 }
-
+/**
+ * @brief promptCreateGrid asks the player if it wants to create a random or
+ * manually inputted grid
+ */
 void promptCreateGrid(Boggle& boggle){
     char answer;
     bool answered = false;
     string manualCharacters = "";
     bool correctFormat;
 
+    cout << "\nDo you want to generate a random board? ";
+
     while(!answered) {
         cin >> answer;
-        if (answer == 'y') {
+        if (answer == 'y' || answer == 'Y') {
             boggle.createGrid(manualCharacters);
             answered = true;
         }
-        else if (answer == 'n') {
+        else if (answer == 'n' || answer == 'N') {
             answered = true;
             while (!correctFormat) {
                 cout << "Enter a string with 16 characters, must be a-z" << endl;
                 cin >> manualCharacters;
                 transform(manualCharacters.begin(), manualCharacters.end(),manualCharacters.begin(), ::toupper); //makes the str uppercase
 
-                int noCubes = boggle.fetchNUM_CUBES();
+                int noCubes = boggle.getNUM_CUBES();
                 if (manualCharacters.size() == noCubes && (!manualCharacters.find_first_not_of(alphabet) != string::npos)) {
                     correctFormat = true;
                 } else {
@@ -85,26 +164,15 @@ void promptCreateGrid(Boggle& boggle){
         }
     }
 }
-void printGrid(Grid<char> grid){
-
-    for(int row = 0; row < grid.numRows(); row++){
-        for(int col = 0; col < grid.numCols(); col++){
-            cout << grid.get(row, col);
-        }
-        cout << endl;
-    }
-}
 
 /*
  * Plays one game of Boggle using the given boggle game state object.
  */
 void playOneGame(Boggle& boggle) {
-    // TODO: implement this function (and add any other functions you like to help you)
-    cout << "Do you want to generate a random board?";
     promptCreateGrid(boggle);
-    printGrid(boggle.fetchGrid());
-    promptUserInput(boggle);
-    cout << "It's your turn!" << endl;
+    promptplayerInput(boggle);
+    printComputerWords(boggle);
+    clearWordsScore(boggle);
 }
 
 
